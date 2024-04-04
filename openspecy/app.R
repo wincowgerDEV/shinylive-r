@@ -16,16 +16,17 @@ library(plotly)
 library(data.table)
 library(DT)
 library(digest)
-library(curl)
+#library(curl)
 library(config)
-library(mongolite)
+#if(db) library(mongolite)
 library(loggit)
+#webr::install("OpenSpecy") #Remove if not running with webr
 library(OpenSpecy)
 library(bs4Dash)
 library(glmnet)
 library(ggplot2)
 
-if(droptoken) library(aws.s3)
+#if(droptoken) library(aws.s3)
 
 
 # Global config ----
@@ -45,9 +46,9 @@ if(isTruthy(conf$log)) {
   }
 }
 
-if(is(tryCatch(check_lib(),error=function(e) e, warning=function(w) w), "warning") & !all(file.exists("data/mediod.rds"), file.exists("data/model.rds"), file.exists("data/nobaseline.rds"), file.exists("data/derivative.rds"))){
-  get_lib()
-}
+#if(is(tryCatch(check_lib(),error=function(e) e, warning=function(w) w), "warning") & !all(file.exists("data/mediod.rds"), file.exists("data/model.rds"), file.exists("data/nobaseline.rds"), file.exists("data/derivative.rds"))){
+#  get_lib()
+#}
 
 # Load all data ----
 load_data <- function() {
