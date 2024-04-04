@@ -1,235 +1,256 @@
-# Forecasting Sandbox ----
-# This is an example for a Shinylive R app
-# The app provides a forecasting sandbox for the AirPassengers dataset
-# It supports 3 stats forecasting models - Linear Regression, ARIMA, and Holt-Winters
-
 library(shiny)
-data(AirPassengers)
+library(shinyjs)
+library(bs4Dash)
+library(shinyWidgets)
+library(dplyr)
+#library(curl)
 
-# UI ----
-ui <- fluidPage(
-
-  # App title ----
-  titlePanel("Forecasting Sandbox"),
-  sidebarLayout(
-
-    sidebarPanel(width = 3,
-        selectInput(inputId = "model",
-                    label = "Select Model",
-                    choices = c("Linear Regression", "ARIMA", "Holt-Winters"),
-                    selected = "Linear Regression"),
-        # Linear Regression model arguments
-        conditionalPanel(condition = "input.model == 'Linear Regression'",
-                         checkboxGroupInput(inputId = "lm_args", 
-                         label = "Select Regression Features:", 
-                         choices = list("Trend" = 1, 
-                                        "Seasonality" = 2),
-                         selected = 1)),
-        # ARIMA model arguments
-        conditionalPanel(condition = "input.model == 'ARIMA'",
-                             h5("Order Parameters"),
-                              sliderInput(inputId = "p",
-                                          label = "p:",
-                                          min = 0,
-                                          max = 5,
-                                          value = 0),
-                            sliderInput(inputId = "d",
-                                          label = "d:",
-                                          min = 0,
-                                          max = 5,
-                                          value = 0),
-                            sliderInput(inputId = "q",
-                                          label = "q:",
-                                          min = 0,
-                                          max = 5,
-                                          value = 0),
-                            h5("Seasonal Parameters:"),
-                            sliderInput(inputId = "P",
-                                          label = "P:",
-                                          min = 0,
-                                          max = 5,
-                                          value = 0),
-                            sliderInput(inputId = "D",
-                                          label = "D:",
-                                          min = 0,
-                                          max = 5,
-                                          value = 0),
-                            sliderInput(inputId = "Q",
-                                          label = "Q:",
-                                          min = 0,
-                                          max = 5,
-                                          value = 0)
-        ),
-        # Holt Winters model arguments
-        conditionalPanel(condition = "input.model == 'Holt-Winters'",
-                         checkboxGroupInput(inputId = "hw_args", 
-                         label = "Select Holt-Winters Parameters:", 
-                         choices = list("Beta" = 2, 
-                                        "Gamma" = 3),
-                         selected = c(1, 2, 3)),
-                          selectInput(inputId = "hw_seasonal",
-                                      label = "Select Seasonal Type:",
-                                      choices = c("Additive", "Multiplicative"),
-                                      selected = "Additive")),
-        
-        checkboxInput(inputId = "log", 
-                    label = "Log Transformation",
-                    value = FALSE),
-      sliderInput(inputId = "h",
-                  label = "Forecasting Horizon:",
-                  min = 1,
-                  max = 60,
-                  value = 24)
-                #   actionButton(inputId = "update",
-                #                 label = "Update!")
-
+file <- read.csv("image_metadata.csv")
+file$images <- paste0("https://d2jrxerjcsjhs7.cloudfront.net/", file$file_names)
+ui <- dashboardPage(
+  dashboardHeader(title = "Microplastic Image Explorer",
+                  fluidRow(
+                    column(
+                      width = 12,
+                      tags$div(
+                        tags$style(HTML("
+                      .navbar {
+                      background-color: #6D929B;
+                      }
+                      .breadcrumb {
+                      font-size: 14px;
+                      font-family: Arial, sans-serif;
+                      }"))
+                      ),
+                      tags$div(
+                        id = "breadcrumb",
+                        verbatimTextOutput("breadcrumb_output")
+                      )
+                    )
+                  )
+  ),
+  dashboardSidebar(
+    sidebarUserPanel(
+      #image = "https://drive.google.com/file/d/13iCjC10dV3giFhCCoir_8mnbwtHM1rMA/view?usp=sharing",
+      name = "Welcome!"
     ),
-
-    # Main panel for displaying outputs ----
-    mainPanel(width = 9,
-      # Forecast Plot ----
-     plotOutput(outputId = "fc_plot",
-                height = "400px")
-
+    tags$style(
+      HTML("
+      .sidebar { 
+      background-color: #6D929B;
+      }
+           ")
+    ),
+    sidebarMenu(
+      id = "sidebarmenu",
+      #sidebarHeader("Header 1"),
+      menuItem(
+        "Image Query",
+        tabName = "item1",
+        icon = icon("camera")
+      )
+    )
+  ),
+  dashboardBody(
+    tags$style(
+      HTML(".content-wrapper {
+              background-color: #F5FAFA;
+           }
+           .selected-border .selectize-input {
+              border-color: #C1DAD6;
+              border-width: 5px;
+              background-color: #C1DAD6;
+           }
+           .overview-box-content h3 {
+              font-size: 20px;
+           }
+           .contribute-box-content h3 {
+              font-size: 20px;
+           }
+        ")
+    ),
+    tags$script(HTML('
+    // JavaScript/jQuery to add custom class when a filter is selected
+    $(document).on("change", "select", function() {
+      $(this).parent().toggleClass("selected-border", $(this).val() !== "ALL");
+    });
+  ')),
+    tabItems(
+      tabItem(
+        tabName = "item1",
+        fluidRow(
+          box(
+            title = "Overview",
+            h3(
+              tags$div(
+                "Welcome to the microplastic taxonomy page!",
+                br(),
+                br(),
+                "This is a place to improve your use of visual microscopy in microplastic identification.",
+                br(),
+                br(),
+                "Go to the image query tab below to get started querying our database of microplastic images by color, morphology, and polymer types.",
+              )
+            ),
+            class = "overview-box-content",
+            width = 12
+          )
+        ),
+        fluidRow(
+          column(4,
+                 selectizeInput(inputId = "citation", 
+                                label = "Citation", 
+                                choices = c("ALL", toupper(unique(file$citation))),
+                                selected = "ALL"
+                 )
+          ),
+          column(4, 
+                 selectizeInput(inputId = "color", 
+                                label = "Color", 
+                                choices = c("ALL", toupper(unique(file$color))),
+                                selected = "ALL"
+                 )
+          ),
+          column(4,
+                 selectizeInput(inputId = "morphology", 
+                                label = "Morphology", 
+                                choices = c("ALL", toupper(unique(file$Morphology))),
+                                selected = "ALL"
+                 )
+          )
+        ),
+        fluidRow(
+          column(4,
+                 selectizeInput(inputId = "polymer", 
+                                label = "Polymer", 
+                                choices = c("ALL", toupper(unique(file$polymer))),
+                                selected = "ALL"
+                 )
+          ),
+          column(4,
+                 selectizeInput(inputId = "size", 
+                                label = "Size", 
+                                choices = c("ALL", toupper(unique(file$size))),
+                                selected = "ALL"
+                 )
+          ),
+          column(4, actionButton(inputId = "clear_filters", label = "Clear All"))
+        ),
+        fluidRow(
+          column(12, uiOutput("images"))
+        ),
+        fluidRow(
+          column(6, align = "center", actionButton("prev_btn", "Previous")),
+          column(6, align = "center", actionButton("next_btn", "Next"))
+        )
+      )
     )
   )
 )
 
-# Define server logic required to draw a histogram ----
-server <- function(input, output) {
-# Load the dataset a reactive object
-    d <- reactiveValues(df = data.frame(input = as.numeric(AirPassengers), 
-                 index = seq.Date(from = as.Date("1949-01-01"),
-                                  by = "month",
-                                  length.out = length(AirPassengers))),
-                        air = AirPassengers)
 
-# Log transformation 
-    observeEvent(input$log,{
-        if(input$log){
-            d$df <- data.frame(input = log(as.numeric(AirPassengers)), 
-                 index = seq.Date(from = as.Date("1949-01-01"),
-                                  by = "month",
-                                  length.out = length(AirPassengers)))
-            
-            d$air <- log(AirPassengers)
-        } else {
-            d$df <- data.frame(input = as.numeric(AirPassengers), 
-                 index = seq.Date(from = as.Date("1949-01-01"),
-                                  by = "month",
-                                  length.out = length(AirPassengers)))
-            
-            d$air <- AirPassengers
-        }
+server <- function(input, output, session) {
+  
+  filtered_breadcrumb <- reactive({
+    citation <- input$citation
+    color <- input$color
+    morphology <- input$morphology
+    polymer <- input$polymer
+    size <- input$size
+    
+    breadcrumb_text <- paste("Filters:", citation, color, morphology, polymer, size, sep = " > ")
+    breadcrumb_text
+  })
+  
+  filtered <- reactive({
+      file %>% 
+          filter(if(input$citation != "ALL") tolower(citation) == tolower(input$citation) else !is.na(images)) %>%
+          filter(if(input$size != "ALL") tolower(size) == tolower(input$size) else !is.na(images)) %>%
+          filter(if(input$color != "ALL") tolower(color) == tolower(input$color) else !is.na(images)) %>%
+          filter(if(input$morphology != "ALL") tolower(morphology) == tolower(input$morphology) else !is.na(images)) %>%
+          filter(if(input$polymer != "ALL") tolower(polymer) == tolower(input$polymer) else !is.na(images))
+  })
+  
+  output$breadcrumb_output <- renderText({
+    breadcrumb_text <- filtered_breadcrumb()
+  })
+  
+  observeEvent(list(input$citation, input$color, input$morphology, input$size, input$polymer), {
+    current_choices <- filtered()
+    updateSelectizeInput(session, "citation", choices = c("ALL", toupper(unique(current_choices$citation))), selected = input$citation)
+    updateSelectizeInput(session, "color", choices = c("ALL", toupper(unique(current_choices$color))), selected = input$color)
+    updateSelectizeInput(session, "morphology", choices = c("ALL", toupper(unique(current_choices$morphology))), selected = input$morphology)
+    updateSelectizeInput(session, "polymer", choices = c("ALL", toupper(unique(current_choices$polymer))), selected = input$polymer)
+    updateSelectizeInput(session, "size", choices = c("ALL", toupper(unique(current_choices$size))), selected = input$size)
+  })
+  
+  observeEvent(input$clear_filters, {
+    updateSelectizeInput(session, "citation", choices = c("ALL", toupper(unique(file$citation))), selected = "ALL")
+    updateSelectizeInput(session, "color", choices = c("ALL", toupper(unique(file$color))), selected = "ALL")
+    updateSelectizeInput(session, "morphology", choices = c("ALL", toupper(unique(file$morphology))), selected = "ALL")
+    updateSelectizeInput(session, "polymer", choices = c("ALL", toupper(unique(file$polymer))), selected = "ALL")
+    updateSelectizeInput(session, "size", choices = c("ALL", toupper(unique(file$size))), selected = "ALL")
+  })
+  
+
+  
+  images_per_page <- 30
+  current_page <- reactiveVal(1)
+  
+  observe({
+    current_page(min(current_page(), total_pages()))
+  })
+  
+  total_pages <- reactive({
+    ceiling(nrow(filtered()) / images_per_page)
+  })
+  
+  paged_data <- reactive({
+    start_index <- (current_page() - 1) * images_per_page + 1
+    end_index <- min(start_index + images_per_page - 1, nrow(filtered()))
+    filtered()[start_index:end_index, ]
+  })
+  
+  output$images <- renderUI({
+    req(paged_data())
+    rows <- lapply(1:nrow(paged_data()), function(x) {
+      div(
+        class = "col-sm-4",
+        box(
+          id = paste0("box", x),
+          title = paged_data()$researcher[x],
+          div(
+            class = "figure",
+            style = "display: flex; justify-content: center; align-items: center;",
+            tags$figure(
+              tags$a(href=paged_data()$images[x], target="_blank",
+                     tags$img(src = paged_data()$images[x], 
+                              style = 'width: 100%; height: 200px; object-fit: contain;',
+                              crossorigin = "anonymous")),
+              tags$figcaption(tags$small(paged_data()$citation[x]))
+            )
+          ),
+          maximizable = TRUE,
+          width = NULL
+        )
+      )
     })
-
-# The forecasting models execute under the plot render
-  output$fc_plot <- renderPlot({
-
-    # if adding a prediction intervals level argument set over here
-    pi <- 0.95
-
-    # Holt-Winters model
-    if(input$model == "Holt-Winters"){
-       a <- b <- c <- NULL
-
-       if(!"2" %in% input$hw_args){
-        b <- FALSE
-       }
-
-       if(!"3" %in% input$hw_args){
-        c <- FALSE
-       }
-
-        md <- HoltWinters(d$air, 
-                          seasonal = ifelse(input$hw_seasonal == "Additive", "additive", "multiplicative"),
-                          beta = b,
-                          gamma = c
-                          )
-        fc <- predict(md, n.ahead = input$h, prediction.interval = TRUE) |>
-                as.data.frame()
-        fc$index <- seq.Date(from = as.Date("1961-01-01"),
-                                  by = "month",
-                                  length.out = input$h)
-    # ARIMA model
-    } else if(input$model == "ARIMA"){
-        
-        md <- arima(d$air,
-                    order = c(input$p, input$d, input$q),
-                    seasonal = list(order = c(input$P, input$D, input$Q))
-                          )
-        fc <- predict(md, n.ahead = input$h, prediction.interval = TRUE) |>
-                as.data.frame() 
-        names(fc) <- c("fit", "se")
-
-        fc$index <- seq.Date(from = as.Date("1961-01-01"),
-                                  by = "month",
-                                  length.out = input$h)
-
-        fc$upr <- fc$fit + 1.96 * fc$se
-        fc$lwr <- fc$fit - 1.96 * fc$se
-    # Linear Regression model
-    } else if(input$model == "Linear Regression"){
-
-        d_lm <- d$df
-
-        d_fc <- data.frame(index = seq.Date(from = as.Date("1961-01-01"),
-                                  by = "month",
-                                  length.out = input$h))
-
-        if("1" %in% input$lm_args){
-            d_lm$trend <- 1:nrow(d_lm)
-            d_fc$trend <- (max(d_lm$trend) + 1):(max(d_lm$trend) + input$h)
-        }
-
-        if("2" %in% input$lm_args){
-            d_lm$season <- as.factor(months((d_lm$index)))
-            d_fc$season <- factor(months((d_fc$index)), levels = levels(d_lm$season))
-        }
-
-        md <- lm(input ~ ., data = d_lm[, - which(names(d_lm) == "index")])
-                          
-        fc <- predict(md, n.ahead = input$h, interval = "prediction",
-        level = pi, newdata = d_fc) |>
-                as.data.frame() 
-        
-
-        fc$index <- seq.Date(from = as.Date("1961-01-01"),
-                                  by = "month",
-                                  length.out = input$h)
-
+    
+    page_numbers <- paste("Page", current_page(), "of", total_pages())
+    page_numbers_div <- tags$div(class = "col-sm-12", style = "text-align: center;", page_numbers)
+    
+    fluidRow(tags$div(class = "row", rows), page_numbers_div)
+  })
+  
+  observeEvent(input$prev_btn, {
+    if (current_page() > 1) {
+      current_page(current_page() - 1)
     }
-
-# Setting the plot
-    at_x <- pretty(seq.Date(from = min(d$df$index),
-                     to = max(fc$index),
-                     by = "month"))
-
-    at_y <- c(pretty(c(d$df$input, fc$upr)), 1200)
-
-    plot(x = d$df$index, y = d$df$input,
-        col = "#1f77b4",
-        type = "l",
-        frame.plot = FALSE,
-        axes = FALSE,
-        panel.first = abline(h = at_y, col = "grey80"),
-        main = "AirPassengers Forecast",
-        xlim = c(min(d$df$index), max(fc$index)),
-        ylim = c(min(c(min(d$df$input), min(fc$lwr))), max(c(max(fc$upr), max(d$df$input)))),
-        xlab = paste("Model:", input$model, sep = " "),
-        ylab = "Num. of Passengers (in Thousands)")
-    mtext(side =1, text = format(at_x, format = "%Y-%M"), at = at_x,
-      col = "grey20", line = 1, cex = 0.8)
-
-mtext(side =2, text = format(at_y, scientific = FALSE), at = at_y,
-      col = "grey20", line = 1, cex = 0.8)
-    lines(x = fc$index, y = fc$fit, col = '#1f77b4', lty = 2, lwd = 2)
-  lines(x = fc$index, y = fc$upr, col = 'blue', lty = 2, lwd = 2)
-  lines(x = fc$index, y = fc$lwr, col = 'blue', lty = 2, lwd = 2)
-
-    })
-
+  })
+  
+  observeEvent(input$next_btn, {
+    current_page(current_page() + 1)
+  })
 }
 
-# Create Shiny app ----
-shinyApp(ui = ui, server = server)
+shinyApp(ui, server)
