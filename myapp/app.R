@@ -150,7 +150,6 @@ ui <- dashboardPage(
 
 
 server <- function(input, output, session) {
-  
   filtered_breadcrumb <- reactive({
     citation <- input$citation
     color <- input$color
