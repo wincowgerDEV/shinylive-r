@@ -1,30 +1,30 @@
 # Check for Auth Tokens and setup, you can change these to test the triggering
 # of functions without removing the files.
-droptoken <- file.exists("s3_cred.csv") #file.exists("data/droptoken.rds") #remove for prototyping with maps
-db <- file.exists("mongo.txt") #reminder, this will break if you login to a new wifi network even with the token.
-translate <- file.exists("www/googletranslate.html")
-config_exists <- file.exists("config.yml")
+droptoken <- F#file.exists("s3_cred.csv") #file.exists("data/droptoken.rds") #remove for prototyping with maps
+db <- F#file.exists("mongo.txt") #reminder, this will break if you login to a new wifi network even with the token.
+translate <- F#file.exists("www/googletranslate.html")
+config_exists <- F#file.exists("config.yml")
 
 #remotes::install_github("wincowgerDEV/OpenSpecy-package@vignettes")
 
 # Libraries ----
 library(shiny)
 library(shinyjs)
-library(shinyWidgets)
-library(dplyr)
-library(plotly)
-library(data.table)
-library(DT)
-library(digest)
+#library(shinyWidgets)
+#library(dplyr)
+#library(plotly)
+#library(data.table)
+#library(DT)
+#library(digest)
 #library(curl)
-library(config)
+#library(config)
 #if(db) library(mongolite)
-library(loggit)
+#library(loggit)
 #webr::install("OpenSpecy") #Remove if not running with webr
 #library(OpenSpecy)
 library(bs4Dash)
-library(glmnet)
-library(ggplot2)
+#library(glmnet)
+#library(ggplot2)
 
 #if(droptoken) library(aws.s3)
 
