@@ -21,7 +21,7 @@ library(config)
 #if(db) library(mongolite)
 library(loggit)
 #webr::install("OpenSpecy") #Remove if not running with webr
-library(OpenSpecy)
+#library(OpenSpecy)
 library(bs4Dash)
 library(glmnet)
 library(ggplot2)
