@@ -10,12 +10,12 @@ config_exists <- F#file.exists("config.yml")
 # Libraries ----
 library(shiny)
 library(shinyjs)
-#library(shinyWidgets)
+library(shinyWidgets)
 #library(dplyr)
 #library(plotly)
 #library(data.table)
 #library(DT)
-#library(digest)
+library(digest)
 #library(curl)
 #library(config)
 #if(db) library(mongolite)
@@ -72,7 +72,7 @@ load_data <- function() {
 
 # Name keys for human readable column names ----
 
-version <- paste0("Open Specy v", packageVersion("OpenSpecy"))
+#version <- paste0("Open Specy v", packageVersion("OpenSpecy"))
 citation <- HTML(
   "Cowger W, Steinmetz Z, Gray A, Munno K, Lynch J, Hapich H, Primpke S, De
   Frond H, Rochman C, Herodotou O (2021). “Microplastic Spectral
